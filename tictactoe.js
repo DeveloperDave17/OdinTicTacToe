@@ -1,61 +1,129 @@
-const playerFactory = (tileMarker) => {
+const playerFactory = (playerName, tileMarker) => {
     
     const getTileMarker = () => tileMarker;
+    const getPlayerName = () => playerName;
 
-    return { getTileMarker };
+    return { getTileMarker, getPlayerName };
 };
 
 const gameBoard = (() => {
-    const gameSquares = [];
-    gameSquares.length = 9;
+    const gameTiles = [];
+    gameTiles.length = 9;
 
     const resetBoard = () => {
-        gameSquares.length = 0;
-        gameSquares.length = 9;
+        gameTiles.length = 0;
+        gameTiles.length = 9;
     }
 
-    const playSquare = (squareNum, player) => {
-        if (gameSquares[squareNum] !== undefined){
-            return false;
-        } else {
-            gameSquares[squareNum] = player.getTileMarker();
+    const playTile = (tileNum, player) => {
+        if (gameTiles[tileNum] === undefined){
+            gameTiles[tileNum] = player.getTileMarker();
             return true;
         }
+        return false;
     }
 
     const checkIfPlayerWon = () => {
         // check row 1
-        if(gameSquares[0] !== undefined && gameSquares[0] === gameSquares[1] && gameSquares[1] === gameSquares[2]) {return true;}
+        if(gameTiles[0] !== undefined && gameTiles[0] === gameTiles[1] && gameTiles[1] === gameTiles[2]) {return true;}
         // check row 2
-        else if(gameSquares[3] !== undefined && gameSquares[3] === gameSquares[4] && gameSquares[4] === gameSquares[5]) { return true;}
+        else if(gameTiles[3] !== undefined && gameTiles[3] === gameTiles[4] && gameTiles[4] === gameTiles[5]) { return true;}
         // check row 3
-        else if(gameSquares[6] !== undefined && gameSquares[6] === gameSquares[7] && gameSquares[7] === gameSquares[8]) { return true;}
+        else if(gameTiles[6] !== undefined && gameTiles[6] === gameTiles[7] && gameTiles[7] === gameTiles[8]) { return true;}
         // check column 1
-        else if(gameSquares[0] !== undefined && gameSquares[0] === gameSquares[3] && gameSquares[3] === gameSquares[6]) { return true;}
+        else if(gameTiles[0] !== undefined && gameTiles[0] === gameTiles[3] && gameTiles[3] === gameTiles[6]) { return true;}
         // check column 2
-        else if(gameSquares[1] !== undefined && gameSquares[1] === gameSquares[4] && gameSquares[4] === gameSquares[7]) { return true;}
+        else if(gameTiles[1] !== undefined && gameTiles[1] === gameTiles[4] && gameTiles[4] === gameTiles[7]) { return true;}
         // check column 3
-        else if(gameSquares[2] !== undefined && gameSquares[2] === gameSquares[5] && gameSquares[5] === gameSquares[8]) { return true;}
+        else if(gameTiles[2] !== undefined && gameTiles[2] === gameTiles[5] && gameTiles[5] === gameTiles[8]) { return true;}
         // check top left to bottom right diagonal
-        else if(gameSquares[0] !== undefined && gameSquares[0] === gameSquares[4] && gameSquares[4] === gameSquares[8]) { return true;}
+        else if(gameTiles[0] !== undefined && gameTiles[0] === gameTiles[4] && gameTiles[4] === gameTiles[8]) { return true;}
         // check bottom left to top right diagonal
-        else if(gameSquares[6] !== undefined && gameSquares[6] === gameSquares[4] && gameSquares[4] === gameSquares[2]) { return true;}
+        else if(gameTiles[6] !== undefined && gameTiles[6] === gameTiles[4] && gameTiles[4] === gameTiles[2]) { return true;}
         // no one has won yet
         else { return false; }
-
     }
 
-    return { resetBoard, playSquare };
+    const checkIfDraw = () => {
+        for (let tile of gameTiles) {
+            if (tile === undefined) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    return { resetBoard, playTile, checkIfPlayerWon, checkIfDraw };
 
 })();
 
-const gameController = (() => {
-    const player1 = playerFactory('X');
-    const player2 = playerFactory('O');
+const gameController = ((
+    playerOneName = "Player One",
+    playerTwoName = "Player Two") => {
 
-    const startGame = () => {
-        gameBoard.resetBoard();
+    const playerOne = playerFactory(playerOneName, 'X');
+    const playerTwo = playerFactory(playerTwoName, 'O');
+
+    const players = [playerOne, playerTwo];
+    
+    let activePlayer = players[0];
+
+    const switchPlayerTurn = () => {
+        activePlayer = activePlayer === players[0] ? players[1] : players[0];
     }
 
+    const getActivePlayer = () => activePlayer;
+
+    const playRound = (tileNum) => {
+        if (gameBoard.playTile(tileNum, activePlayer)) {
+            displayController.displayTile(tileNum, activePlayer);
+            if (gameBoard.checkIfPlayerWon()) {
+                displayController.displayWinner(activePlayer);
+                displayController.resetBoard();
+                gameBoard.resetBoard();
+            } else if (gameBoard.checkIfDraw()) {
+                displayController.displayDraw();
+                displayController.resetBoard();
+                gameBoard.resetBoard();
+            } else {
+            switchPlayerTurn();
+            }
+        }
+    }
+
+    return { getActivePlayer, playRound };
 })();
 
+const displayController = (() => {
+    const gameTileElements = document.querySelectorAll(".game-board-container>div");
+
+    const resetBoard = (() => {
+        for (let gameTile of gameTileElements) {
+            gameTile.textContent = "";
+        }
+    });
+
+    const enableTileSelection = () => {
+        for (let i = 0; i < 9; i++){
+            if (gameBoard[i] === undefined) {
+                gameTileElements[i].addEventListener("click", function(){gameController.playRound(i)});
+            }
+        }
+    }
+
+    const displayTile = (tileNum, player) => {
+        gameTileElements[tileNum].textContent = player.getTileMarker();
+    }
+
+    const displayWinner = (player) => {
+        alert(`${player.getPlayerName()} has won!`);
+    }
+
+    const displayDraw = () => {
+        alert("It's a draw!");
+    }
+
+    return { resetBoard, enableTileSelection, displayTile, displayWinner, displayDraw };
+})();
+
+displayController.enableTileSelection();

@@ -9,6 +9,37 @@
 </head>
 <body>
     <div class="grid-container">
+        <div class="game-menu">
+            <h1>Fantasy Tic Tac Toe</h1>
+            <div class="character-customization">
+                <p>Select a Character</p>
+                <div class="character-holder"><img src="./pictures/knight.png" alt="Human"></div>
+                <div class="character-holder"><img src="./pictures/elf.png" alt="Elf"></div>
+                <div class="character-name">
+                    <span>Name:</span>
+                    <input type="text" value="Player One">
+                </div>
+            </div>
+            <div class="character-customization">
+                <p>Select a Character</p>
+                <div class="character-holder"><img src="./pictures/minotaur.png" alt="minotaur"></div>
+                <div class="character-holder"><img src="./pictures/troll.png" alt="troll"></div>
+                <div class="character-name">
+                    <span>Name:</span>
+                    <input type="text" value="Player Two">
+                </div>
+            </div>
+            <div class="mode-selection">
+                <span>Mode:</span>
+                <select name="mode" id="mode">
+                    <option value="pvp">Player vs Player</option>
+                    <option value="easyAI">Easy Difficulty AI</option>
+                    <option value="mediumAI">Medium Difficulty AI</option>
+                    <option value="hardAI">Hard Difficulty AI</option>
+                </select>
+            </div>
+            <button class="start-button">Start</button>
+        </div>
         <div class="game-board-container">
             <div id="tile1"></div>
             <div id="tile2"></div>

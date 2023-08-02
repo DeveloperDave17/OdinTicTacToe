@@ -96,6 +96,18 @@ const gameController = ((
 
 const displayController = (() => {
     const gameTileElements = document.querySelectorAll(".game-board-container>div");
+    const startButton = document.querySelector(".start-button");
+    const gameMenu = document.querySelector(".game-menu");
+    const gameBoardContainer = document.querySelector(".game-board-container");
+
+    const startGame = () => {
+        gameMenu.style.display = "none";
+        gameBoardContainer.style.display = "grid";
+    }
+
+    const attachMenuListeners = () => {
+        startButton.addEventListener("click", startGame);
+    }
 
     const resetBoard = (() => {
         for (let gameTile of gameTileElements) {
@@ -123,7 +135,8 @@ const displayController = (() => {
         alert("It's a draw!");
     }
 
-    return { resetBoard, enableTileSelection, displayTile, displayWinner, displayDraw };
+    return { resetBoard, enableTileSelection, displayTile, displayWinner, displayDraw, attachMenuListeners };
 })();
 
 displayController.enableTileSelection();
+displayController.attachMenuListeners();

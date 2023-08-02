@@ -91,7 +91,13 @@ const gameController = ((
         }
     }
 
-    return { getActivePlayer, playRound };
+    const restartGame = () => {
+        activePlayer = players[0];
+        displayController.resetBoard();
+        gameBoard.resetBoard();
+    }
+
+    return { getActivePlayer, playRound, restartGame };
 })();
 
 const displayController = (() => {
@@ -99,14 +105,33 @@ const displayController = (() => {
     const startButton = document.querySelector(".start-button");
     const gameMenu = document.querySelector(".game-menu");
     const gameBoardContainer = document.querySelector(".game-board-container");
+    const gameControls = document.querySelector(".game-controls");
+    const menuButton = document.querySelector(".menu-button");
+    const restartButton = document.querySelector(".restart-button");
+    const leftCharacters = document.querySelectorAll(".left-characters>.character-holder");
+    const rightCharacters = document.querySelectorAll(".right-characters>.character-holder");
 
     const startGame = () => {
         gameMenu.style.display = "none";
         gameBoardContainer.style.display = "grid";
+        gameControls.style.display = "block";
+        gameController.restartGame();
+    }
+
+    const enableMenu = () => {
+        gameMenu.style.display = "grid";
+        gameBoardContainer.style.display = "none";
+        gameControls.style.display = "none";
     }
 
     const attachMenuListeners = () => {
         startButton.addEventListener("click", startGame);
+        restartButton.addEventListener("click", gameController.restartGame);
+        menuButton.addEventListener("click", enableMenu);
+        leftCharacters[0].addEventListener("click", function() {toggleCharacterSelection(leftCharacters[0], leftCharacters[1])});
+        leftCharacters[1].addEventListener("click", function() {toggleCharacterSelection(leftCharacters[1], leftCharacters[0])});
+        rightCharacters[0].addEventListener("click", function() {toggleCharacterSelection(rightCharacters[0], rightCharacters[1])});
+        rightCharacters[1].addEventListener("click", function() {toggleCharacterSelection(rightCharacters[1], rightCharacters[0])});
     }
 
     const resetBoard = (() => {
@@ -134,6 +159,13 @@ const displayController = (() => {
     const displayDraw = () => {
         alert("It's a draw!");
     }
+
+    const toggleCharacterSelection = (choice, otherChoice) => {
+        choice.classList.add("selected");
+        otherChoice.classList.remove("selected");
+    }
+
+
 
     return { resetBoard, enableTileSelection, displayTile, displayWinner, displayDraw, attachMenuListeners };
 })();

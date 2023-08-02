@@ -74,7 +74,7 @@ body {
     height: 200px;
     width: 200px;
     padding: 8px;
-    border: 1px solid black;
+    border: 2px solid black;
     margin: 8px;
     display: flex;
     justify-content: center;
@@ -83,6 +83,10 @@ body {
 .character-holder > img {
     height: 100%;
     width: auto;
+}
+
+.selected {
+    border-color: rgb(6, 225, 6);
 }
 
 .character-name {
@@ -98,6 +102,25 @@ body {
     grid-template-columns: 1fr 1fr 1fr;
     grid-template-rows: 1fr 1fr 1fr;
     grid-area: 2 / 2 / 3 / 3;
+}
+
+.game-controls {
+    display: none;
+    grid-area: 3 / 2 / 4 / 3;
+    margin-top: 30px;
+    align-self: baseline;
+    justify-self: center;
+}
+
+.game-controls button:first-child {
+    margin-right: 50px;
+}
+
+.game-controls button {
+    height: 50px;
+    width: 200px;
+    font-size: 16px;
+    font-weight: 600;
 }
 
 .game-board-container div {

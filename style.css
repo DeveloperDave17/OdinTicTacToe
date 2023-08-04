@@ -126,6 +126,14 @@ body {
 .game-board-container div {
     background-color: gray;
     border: 2px solid black;
+    display: flex;
+    justify-content: center;
+}
+
+.game-board-container img {
+    height: 120px;
+    width: auto;
+    align-self: center;
 }
 
 #tile1 {

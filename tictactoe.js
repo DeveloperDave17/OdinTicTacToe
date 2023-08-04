@@ -53,20 +53,23 @@ const gameBoard = (() => {
         return true;
     }
 
-    return { resetBoard, playTile, checkIfPlayerWon, checkIfDraw };
+    const fillGameTiles = () => {
+        for (let i = 0; i < 9; i++)
+            gameTiles[i] = "filler";
+    }
+
+    return { resetBoard, playTile, checkIfPlayerWon, checkIfDraw, fillGameTiles };
 
 })();
 
-const gameController = ((
-    playerOneName = "Player One",
-    playerTwoName = "Player Two") => {
+const gameController = (() => {
 
-    const playerOne = playerFactory(playerOneName, 'X');
-    const playerTwo = playerFactory(playerTwoName, 'O');
+    let playerOne;
+    let playerTwo;
 
-    const players = [playerOne, playerTwo];
+    let players;
     
-    let activePlayer = players[0];
+    let activePlayer;
 
     const switchPlayerTurn = () => {
         activePlayer = activePlayer === players[0] ? players[1] : players[0];
@@ -79,12 +82,14 @@ const gameController = ((
             displayController.displayTile(tileNum, activePlayer);
             if (gameBoard.checkIfPlayerWon()) {
                 displayController.displayWinner(activePlayer);
-                displayController.resetBoard();
-                gameBoard.resetBoard();
+                gameBoard.fillGameTiles();
+                // displayController.resetBoard();
+                // gameBoard.resetBoard();
             } else if (gameBoard.checkIfDraw()) {
                 displayController.displayDraw();
-                displayController.resetBoard();
-                gameBoard.resetBoard();
+                gameBoard.fillGameTiles();
+                // displayController.resetBoard();
+                // gameBoard.resetBoard();
             } else {
             switchPlayerTurn();
             }
@@ -97,11 +102,19 @@ const gameController = ((
         gameBoard.resetBoard();
     }
 
-    return { getActivePlayer, playRound, restartGame };
+    const setPlayers = (playerOneName, playerOneToken, playerTwoName, playerTwoToken) => {
+        playerOne = playerFactory(playerOneName, playerOneToken);
+        playerTwo = playerFactory(playerTwoName, playerTwoToken);
+        players = [playerOne, playerTwo];
+        activePlayer = players[0];
+    }
+
+    return { getActivePlayer, playRound, restartGame, setPlayers };
 })();
 
 const displayController = (() => {
     const gameTileElements = document.querySelectorAll(".game-board-container>div");
+    const gameTileImages = document.querySelectorAll(".game-board-container>div>img");
     const startButton = document.querySelector(".start-button");
     const gameMenu = document.querySelector(".game-menu");
     const gameBoardContainer = document.querySelector(".game-board-container");
@@ -110,11 +123,18 @@ const displayController = (() => {
     const restartButton = document.querySelector(".restart-button");
     const leftCharacters = document.querySelectorAll(".left-characters>.character-holder");
     const rightCharacters = document.querySelectorAll(".right-characters>.character-holder");
+    const leftCharacterImages = document.querySelectorAll(".left-characters>.character-holder>img");
+    const rightCharacterImages = document.querySelectorAll(".right-characters>.character-holder>img");
+    const characterNameInputs = document.querySelectorAll(".game-menu input");
 
     const startGame = () => {
         gameMenu.style.display = "none";
         gameBoardContainer.style.display = "grid";
         gameControls.style.display = "block";
+        let characterNames = getCharacterNames();
+        let characters = getSelectedCharacters();
+        gameController.setPlayers(characterNames[0], characters[0], characterNames[1], characters[1]);
+        displayController.enableTileSelection();
         gameController.restartGame();
     }
 
@@ -135,9 +155,9 @@ const displayController = (() => {
     }
 
     const resetBoard = (() => {
-        for (let gameTile of gameTileElements) {
-            gameTile.textContent = "";
-        }
+         for (let gameTile of gameTileImages) {
+             gameTile.setAttribute("src", "");
+         }
     });
 
     const enableTileSelection = () => {
@@ -149,7 +169,7 @@ const displayController = (() => {
     }
 
     const displayTile = (tileNum, player) => {
-        gameTileElements[tileNum].textContent = player.getTileMarker();
+        gameTileImages[tileNum].setAttribute("src", player.getTileMarker());
     }
 
     const displayWinner = (player) => {
@@ -165,10 +185,34 @@ const displayController = (() => {
         otherChoice.classList.remove("selected");
     }
 
+    const getSelectedCharacters = () => {
+        let characters = [2];
 
+        for (let character of leftCharacterImages) {
+            if (leftCharacters[0].contains(character) && leftCharacters[0].classList.contains("selected")){
+                characters[0] = character.getAttribute("src");
+            } else if (leftCharacters[1].contains(character) && leftCharacters[1].classList.contains("selected")){
+                characters[0] = character.getAttribute("src");
+            }
+        }
+
+        for (let character of rightCharacterImages) {
+            if (rightCharacters[0].contains(character) && rightCharacters[0].classList.contains("selected")){
+                characters[1] = character.getAttribute("src");
+            } else if (rightCharacters[1].contains(character) && rightCharacters[1].classList.contains("selected")){
+                characters[1] = character.getAttribute("src");
+            }
+        }
+
+        return characters;
+    }
+
+    const getCharacterNames = () => {
+        let characterNames = [characterNameInputs[0].value, characterNameInputs[1].value];
+        return characterNames;
+    }
 
     return { resetBoard, enableTileSelection, displayTile, displayWinner, displayDraw, attachMenuListeners };
 })();
 
-displayController.enableTileSelection();
 displayController.attachMenuListeners();

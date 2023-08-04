@@ -92,6 +92,7 @@ const gameController = (() => {
                 // gameBoard.resetBoard();
             } else {
             switchPlayerTurn();
+            displayController.changeGameStatusMessage(`${getActivePlayer().getPlayerName()}'s turn`);
             }
         }
     }
@@ -118,6 +119,7 @@ const displayController = (() => {
     const startButton = document.querySelector(".start-button");
     const gameMenu = document.querySelector(".game-menu");
     const gameBoardContainer = document.querySelector(".game-board-container");
+    const gameStatus = document.querySelector(".game-status");
     const gameControls = document.querySelector(".game-controls");
     const menuButton = document.querySelector(".menu-button");
     const restartButton = document.querySelector(".restart-button");
@@ -131,17 +133,20 @@ const displayController = (() => {
         gameMenu.style.display = "none";
         gameBoardContainer.style.display = "grid";
         gameControls.style.display = "block";
+        gameStatus.style.display = "block";
         let characterNames = getCharacterNames();
         let characters = getSelectedCharacters();
         gameController.setPlayers(characterNames[0], characters[0], characterNames[1], characters[1]);
         displayController.enableTileSelection();
         gameController.restartGame();
+        changeGameStatusMessage(`${gameController.getActivePlayer().getPlayerName()}'s turn`);
     }
 
     const enableMenu = () => {
         gameMenu.style.display = "grid";
         gameBoardContainer.style.display = "none";
         gameControls.style.display = "none";
+        gameStatus.style.display = "none";
     }
 
     const attachMenuListeners = () => {
@@ -158,6 +163,7 @@ const displayController = (() => {
          for (let gameTile of gameTileImages) {
              gameTile.setAttribute("src", "");
          }
+         changeGameStatusMessage(`${gameController.getActivePlayer().getPlayerName()}'s turn`);
     });
 
     const enableTileSelection = () => {
@@ -173,11 +179,11 @@ const displayController = (() => {
     }
 
     const displayWinner = (player) => {
-        alert(`${player.getPlayerName()} has won!`);
+        changeGameStatusMessage(`${player.getPlayerName()} has won!`);
     }
 
     const displayDraw = () => {
-        alert("It's a draw!");
+        changeGameStatusMessage("It's a draw!");
     }
 
     const toggleCharacterSelection = (choice, otherChoice) => {
@@ -212,7 +218,11 @@ const displayController = (() => {
         return characterNames;
     }
 
-    return { resetBoard, enableTileSelection, displayTile, displayWinner, displayDraw, attachMenuListeners };
+    const changeGameStatusMessage = (message) => {
+        gameStatus.textContent = message;
+    }
+
+    return { resetBoard, enableTileSelection, displayTile, displayWinner, displayDraw, attachMenuListeners, changeGameStatusMessage };
 })();
 
 displayController.attachMenuListeners();

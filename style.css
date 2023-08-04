@@ -95,6 +95,15 @@ body {
     justify-self: center;
 }
 
+.game-status {
+    display: none;
+    align-self: center;
+    justify-self: center;
+    font-size: 24px;
+    color: whitesmoke;
+    grid-area: 1 / 2 / 2 / 3;
+}
+
 .game-board-container {
     display: none;
     width: 500px;

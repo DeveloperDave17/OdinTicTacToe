@@ -58,7 +58,44 @@ const gameBoard = (() => {
             gameTiles[i] = "filler";
     }
 
-    return { resetBoard, playTile, checkIfPlayerWon, checkIfDraw, fillGameTiles };
+    const checkForAiWin = (player) => {
+         // check row 1
+         if(gameTiles[0] === player.getTileMarker() && gameTiles[0] === gameTiles[1] && gameTiles[2] === undefined) {return 2;}
+         if(gameTiles[1] === player.getTileMarker() && gameTiles[1] === gameTiles[2] && gameTiles[0] === undefined) {return 0;}
+         if(gameTiles[0] === player.getTileMarker() && gameTiles[0] === gameTiles[2] && gameTiles[1] === undefined) {return 1;}
+         // check row 2
+         if(gameTiles[3] === player.getTileMarker() && gameTiles[3] === gameTiles[4] && gameTiles[5] === undefined) {return 5;}
+         if(gameTiles[4] === player.getTileMarker() && gameTiles[4] === gameTiles[5] && gameTiles[3] === undefined) {return 3;}
+         if(gameTiles[3] === player.getTileMarker() && gameTiles[3] === gameTiles[5] && gameTiles[4] === undefined) {return 4;}
+         // check row 3
+         if(gameTiles[6] === player.getTileMarker() && gameTiles[6] === gameTiles[7] && gameTiles[8] === undefined) {return 8;}
+         if(gameTiles[7] === player.getTileMarker() && gameTiles[7] === gameTiles[8] && gameTiles[6] === undefined) {return 6;}
+         if(gameTiles[6] === player.getTileMarker() && gameTiles[6] === gameTiles[8] && gameTiles[7] === undefined) {return 7;}
+         // check column 1
+         if(gameTiles[0] === player.getTileMarker() && gameTiles[0] === gameTiles[3] && gameTiles[6] === undefined) {return 6;}
+         if(gameTiles[3] === player.getTileMarker() && gameTiles[3] === gameTiles[6] && gameTiles[0] === undefined) {return 0;}
+         if(gameTiles[6] === player.getTileMarker() && gameTiles[0] === gameTiles[6] && gameTiles[3] === undefined) {return 3;}
+         // check column 2
+         if(gameTiles[1] === player.getTileMarker() && gameTiles[1] === gameTiles[4] && gameTiles[7] === undefined) {return 7;}
+         if(gameTiles[4] === player.getTileMarker() && gameTiles[1] === gameTiles[7] && gameTiles[4] === undefined) {return 4;}
+         if(gameTiles[7] === player.getTileMarker() && gameTiles[4] === gameTiles[7] && gameTiles[1] === undefined) {return 1;}
+         // check column 3
+         if(gameTiles[2] === player.getTileMarker() && gameTiles[2] === gameTiles[5] && gameTiles[8] === undefined) {return 8;}
+         if(gameTiles[5] === player.getTileMarker() && gameTiles[5] === gameTiles[8] && gameTiles[2] === undefined) {return 2;}
+         if(gameTiles[8] === player.getTileMarker() && gameTiles[2] === gameTiles[8] && gameTiles[5] === undefined) {return 5;}
+         // check top left to bottom right diagonal
+         if(gameTiles[0] === player.getTileMarker() && gameTiles[0] === gameTiles[4] && gameTiles[8] === undefined) {return 8;}
+         if(gameTiles[4] === player.getTileMarker() && gameTiles[4] === gameTiles[8] && gameTiles[0] === undefined) {return 0;}
+         if(gameTiles[8] === player.getTileMarker() && gameTiles[0] === gameTiles[8] && gameTiles[4] === undefined) {return 4;}
+         // check bottom left to top right diagonal
+         if(gameTiles[2] === player.getTileMarker() && gameTiles[2] === gameTiles[4] && gameTiles[6] === undefined) {return 6;}
+         if(gameTiles[4] === player.getTileMarker() && gameTiles[4] === gameTiles[6] && gameTiles[2] === undefined) {return 2;}
+         if(gameTiles[6] === player.getTileMarker() && gameTiles[0] === gameTiles[6] && gameTiles[4] === undefined) {return 4;}
+         // no winning move
+         return -1;
+    }
+
+    return { resetBoard, playTile, checkIfPlayerWon, checkIfDraw, fillGameTiles, checkForAiWin };
 
 })();
 
@@ -70,6 +107,8 @@ const gameController = (() => {
     let players;
     
     let activePlayer;
+
+    let aiOptions;
 
     const switchPlayerTurn = () => {
         activePlayer = activePlayer === players[0] ? players[1] : players[0];
@@ -97,10 +136,161 @@ const gameController = (() => {
         }
     }
 
+    const playRoundEasyAI = (tileNum) => {
+        if (gameBoard.playTile(tileNum, activePlayer)) {
+            displayController.displayTile(tileNum, activePlayer);
+            if (gameBoard.checkIfPlayerWon()) {
+                displayController.displayWinner(activePlayer);
+                gameBoard.fillGameTiles();
+            } else if (gameBoard.checkIfDraw()) {
+                displayController.displayDraw();
+                gameBoard.fillGameTiles();
+            } else {
+                let aiPlayed = false;
+                switchPlayerTurn();
+                while (!aiPlayed) {
+                    let tileAttempt = Math.floor(Math.random() * 10);
+                    aiPlayed = gameBoard.playTile(tileAttempt, activePlayer);
+                    if (aiPlayed) {
+                        displayController.displayTile(tileAttempt, activePlayer);
+                    }
+                }
+
+                if (gameBoard.checkIfPlayerWon()) {
+                    displayController.displayWinner(activePlayer);
+                    gameBoard.fillGameTiles();
+                } else if (gameBoard.checkIfDraw()) {
+                    displayController.displayDraw();
+                    gameBoard.fillGameTiles();
+                } else {
+                    switchPlayerTurn();
+                }
+            }
+        }
+    }
+
+    const playRoundAI = (tileNum) => {
+        if (gameBoard.playTile(tileNum, activePlayer)) {
+            displayController.displayTile(tileNum, activePlayer);
+            aiOptions[tileNum] = -100;
+            if (tileNum === 0) {
+                aiOptions[1] += 1;
+                aiOptions[2] += 2;
+                aiOptions[3] += 1;
+                aiOptions[6] += 2;
+                aiOptions[4] += 1;
+                aiOptions[8] += 2;
+            } else if (tileNum === 1) {
+                aiOptions[0] += 1;
+                aiOptions[2] += 1;
+                aiOptions[4] += 1;
+                aiOptions[7] += 2;
+            } else if (tileNum === 2) {
+                aiOptions[0] += 2;
+                aiOptions[1] += 1;
+                aiOptions[4] += 1;
+                aiOptions[5] += 1;
+                aiOptions[6] += 2;
+                aiOptions[8] += 2;
+            } else if (tileNum === 3) {
+                aiOptions[0] += 1;
+                aiOptions[4] += 1;
+                aiOptions[5] += 2;
+                aiOptions[6] += 1;
+            } else if (tileNum === 4) {
+                aiOptions[0] += 2;
+                aiOptions[1] += 1;
+                aiOptions[2] += 2;
+                aiOptions[3] += 1;
+                aiOptions[5] += 1;
+                aiOptions[6] += 2;
+                aiOptions[7] += 1;
+                aiOptions[8] += 2;
+            } else if (tileNum === 5) {
+                aiOptions[2] += 1;
+                aiOptions[3] += 2;
+                aiOptions[4] += 1;
+                aiOptions[8] += 1;
+            } else if (tileNum === 6) {
+                aiOptions[0] += 2;
+                aiOptions[2] += 2;
+                aiOptions[3] += 1;
+                aiOptions[4] += 1;
+                aiOptions[7] += 1;
+                aiOptions[8] += 2;
+            } else if (tileNum === 7) {
+                aiOptions[1] += 2;
+                aiOptions[4] += 1;
+                aiOptions[6] += 1;
+                aiOptions[8] += 1;
+            } else if (tileNum === 8) {
+                aiOptions[0] += 2;
+                aiOptions[2] += 2;
+                aiOptions[4] += 1;
+                aiOptions[5] += 1;
+                aiOptions[6] += 2;
+                aiOptions[7] += 1;
+            }
+
+            if (gameBoard.checkIfPlayerWon()) {
+                displayController.displayWinner(activePlayer);
+                gameBoard.fillGameTiles();
+            } else if (gameBoard.checkIfDraw()) {
+                displayController.displayDraw();
+                gameBoard.fillGameTiles();
+            } else {
+                let aiPlayed = false;
+                switchPlayerTurn();
+                // while (!aiPlayed) {
+                //     let tileAttempt = Math.floor(Math.random() * 10);
+                //     aiPlayed = gameBoard.playTile(tileAttempt, activePlayer);
+                //     if (aiPlayed) {
+                //         displayController.displayTile(tileAttempt, activePlayer);
+                //     }
+                // }
+
+                let maxTile = gameBoard.checkForAiWin(activePlayer);
+                let playerWinningTile = gameBoard.checkForAiWin(playerOne);
+                if (maxTile === -1) {
+                    if (playerWinningTile === -1) {
+                        let maxValue = 0;
+                        for (let i = 0; i < 9; i++) {
+                            if (aiOptions[i] > maxValue) {
+                                maxValue = aiOptions[i];
+                                maxTile = i;
+                            }
+                        }
+                    } else {
+                        maxTile = playerWinningTile;
+                    }
+                }
+                gameBoard.playTile(maxTile, activePlayer);
+                displayController.displayTile(maxTile, activePlayer);
+
+                aiOptions[maxTile] = -100;
+
+                if (gameBoard.checkIfPlayerWon()) {
+                    displayController.displayWinner(activePlayer);
+                    gameBoard.fillGameTiles();
+                } else if (gameBoard.checkIfDraw()) {
+                    displayController.displayDraw();
+                    gameBoard.fillGameTiles();
+                } else {
+                    switchPlayerTurn();
+                }
+            }
+        }
+    }
+
     const restartGame = () => {
         activePlayer = players[0];
         displayController.resetBoard();
         gameBoard.resetBoard();
+        aiOptions = [9];
+        for (let i = 0; i < 9; i++) {
+            aiOptions[i] = 0;
+        }
+        aiOptions[4] = 3;
     }
 
     const setPlayers = (playerOneName, playerOneToken, playerTwoName, playerTwoToken) => {
@@ -110,7 +300,7 @@ const gameController = (() => {
         activePlayer = players[0];
     }
 
-    return { getActivePlayer, playRound, restartGame, setPlayers };
+    return { getActivePlayer, playRound, playRoundEasyAI, playRoundAI, restartGame, setPlayers };
 })();
 
 const displayController = (() => {
@@ -128,6 +318,9 @@ const displayController = (() => {
     const leftCharacterImages = document.querySelectorAll(".left-characters>.character-holder>img");
     const rightCharacterImages = document.querySelectorAll(".right-characters>.character-holder>img");
     const characterNameInputs = document.querySelectorAll(".game-menu input");
+    const modeSelect = document.querySelector("#mode");
+
+    let enabledTiles;
 
     const startGame = () => {
         gameMenu.style.display = "none";
@@ -137,7 +330,16 @@ const displayController = (() => {
         let characterNames = getCharacterNames();
         let characters = getSelectedCharacters();
         gameController.setPlayers(characterNames[0], characters[0], characterNames[1], characters[1]);
-        displayController.enableTileSelection();
+
+        let mode = modeSelect.value;
+        enabledTiles = [9];
+        if (mode === "pvp"){
+            displayController.enableTileSelection(gameController.playRound);
+        } else if (mode === "easyAI") {
+            displayController.enableTileSelection(gameController.playRoundEasyAI);
+        } else {
+            displayController.enableTileSelection(gameController.playRoundAI);
+        }
         gameController.restartGame();
         changeGameStatusMessage(`${gameController.getActivePlayer().getPlayerName()}'s turn`);
     }
@@ -147,6 +349,7 @@ const displayController = (() => {
         gameBoardContainer.style.display = "none";
         gameControls.style.display = "none";
         gameStatus.style.display = "none";
+        disableTileSelection();
     }
 
     const attachMenuListeners = () => {
@@ -166,10 +369,18 @@ const displayController = (() => {
          changeGameStatusMessage(`${gameController.getActivePlayer().getPlayerName()}'s turn`);
     });
 
-    const enableTileSelection = () => {
+    const enableTileSelection = (playRound) => {
         for (let i = 0; i < 9; i++){
             if (gameBoard[i] === undefined) {
-                gameTileElements[i].addEventListener("click", function(){gameController.playRound(i)});
+                gameTileElements[i].addEventListener("click", enabledTiles[i] = function(){playRound(i)});
+            }
+        }
+    }
+
+    const disableTileSelection = () => {
+        for (let i = 0; i < 9; i++){
+            if (gameBoard[i] === undefined) {
+                gameTileElements[i].removeEventListener("click", enabledTiles[i]);
             }
         }
     }
@@ -222,7 +433,7 @@ const displayController = (() => {
         gameStatus.textContent = message;
     }
 
-    return { resetBoard, enableTileSelection, displayTile, displayWinner, displayDraw, attachMenuListeners, changeGameStatusMessage };
+    return { resetBoard, enableTileSelection, disableTileSelection, displayTile, displayWinner, displayDraw, attachMenuListeners, changeGameStatusMessage };
 })();
 
 displayController.attachMenuListeners();

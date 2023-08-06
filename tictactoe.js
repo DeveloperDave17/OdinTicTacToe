@@ -169,10 +169,72 @@ const gameController = (() => {
         }
     }
 
-    const playRoundAI = (tileNum) => {
+    const playRoundAI = (tileNum, difficultyRating) => {
         if (gameBoard.playTile(tileNum, activePlayer)) {
             displayController.displayTile(tileNum, activePlayer);
-            aiOptions[tileNum] = -100;
+            adjustAisNextMove(tileNum);
+
+            if (gameBoard.checkIfPlayerWon()) {
+                displayController.displayWinner(activePlayer);
+                gameBoard.fillGameTiles();
+            } else if (gameBoard.checkIfDraw()) {
+                displayController.displayDraw();
+                gameBoard.fillGameTiles();
+            } else {
+                switchPlayerTurn();
+                if (Math.random() >= difficultyRating) {
+                    let aiPlayed = false;
+                    let maxTile = gameBoard.checkForAiWin(activePlayer);
+                    if (maxTile === -1) {
+                        while (!aiPlayed) {
+                            let tileAttempt = Math.floor(Math.random() * 9);
+                            aiPlayed = gameBoard.playTile(tileAttempt, activePlayer);
+                            if (aiPlayed) {
+                                displayController.displayTile(tileAttempt, activePlayer);
+                                aiOptions[tileAttempt] = -100;
+                            }
+                        }
+                    } else {
+                        gameBoard.playTile(maxTile, activePlayer);
+                        displayController.displayTile(maxTile, activePlayer);
+                        aiOptions[maxTile] = -100;
+                    }
+                } else {
+                    let maxTile = gameBoard.checkForAiWin(activePlayer);
+                    let playerWinningTile = gameBoard.checkForAiWin(playerOne);
+                    if (maxTile === -1) {
+                        if (playerWinningTile === -1) {
+                            let maxValue = 0;
+                            for (let i = 0; i < 9; i++) {
+                                if (aiOptions[i] > maxValue) {
+                                    maxValue = aiOptions[i];
+                                    maxTile = i;
+                                }
+                            }
+                        } else {
+                            maxTile = playerWinningTile;
+                        }
+                    }
+                    gameBoard.playTile(maxTile, activePlayer);
+                    displayController.displayTile(maxTile, activePlayer);
+                    aiOptions[maxTile] = -100;
+                }
+
+                if (gameBoard.checkIfPlayerWon()) {
+                    displayController.displayWinner(activePlayer);
+                    gameBoard.fillGameTiles();
+                } else if (gameBoard.checkIfDraw()) {
+                    displayController.displayDraw();
+                    gameBoard.fillGameTiles();
+                } else {
+                    switchPlayerTurn();
+                }
+            }
+        }
+    }
+
+    const adjustAisNextMove = (tileNum) => {
+        aiOptions[tileNum] = -100;
             if (tileNum === 0) {
                 aiOptions[1] += 1;
                 aiOptions[2] += 2;
@@ -231,55 +293,6 @@ const gameController = (() => {
                 aiOptions[6] += 2;
                 aiOptions[7] += 1;
             }
-
-            if (gameBoard.checkIfPlayerWon()) {
-                displayController.displayWinner(activePlayer);
-                gameBoard.fillGameTiles();
-            } else if (gameBoard.checkIfDraw()) {
-                displayController.displayDraw();
-                gameBoard.fillGameTiles();
-            } else {
-                let aiPlayed = false;
-                switchPlayerTurn();
-                // while (!aiPlayed) {
-                //     let tileAttempt = Math.floor(Math.random() * 10);
-                //     aiPlayed = gameBoard.playTile(tileAttempt, activePlayer);
-                //     if (aiPlayed) {
-                //         displayController.displayTile(tileAttempt, activePlayer);
-                //     }
-                // }
-
-                let maxTile = gameBoard.checkForAiWin(activePlayer);
-                let playerWinningTile = gameBoard.checkForAiWin(playerOne);
-                if (maxTile === -1) {
-                    if (playerWinningTile === -1) {
-                        let maxValue = 0;
-                        for (let i = 0; i < 9; i++) {
-                            if (aiOptions[i] > maxValue) {
-                                maxValue = aiOptions[i];
-                                maxTile = i;
-                            }
-                        }
-                    } else {
-                        maxTile = playerWinningTile;
-                    }
-                }
-                gameBoard.playTile(maxTile, activePlayer);
-                displayController.displayTile(maxTile, activePlayer);
-
-                aiOptions[maxTile] = -100;
-
-                if (gameBoard.checkIfPlayerWon()) {
-                    displayController.displayWinner(activePlayer);
-                    gameBoard.fillGameTiles();
-                } else if (gameBoard.checkIfDraw()) {
-                    displayController.displayDraw();
-                    gameBoard.fillGameTiles();
-                } else {
-                    switchPlayerTurn();
-                }
-            }
-        }
     }
 
     const restartGame = () => {
@@ -334,11 +347,13 @@ const displayController = (() => {
         let mode = modeSelect.value;
         enabledTiles = [9];
         if (mode === "pvp"){
-            displayController.enableTileSelection(gameController.playRound);
+            enableTileSelection(gameController.playRound);
         } else if (mode === "easyAI") {
-            displayController.enableTileSelection(gameController.playRoundEasyAI);
+            enableTileSelection(gameController.playRoundEasyAI);
+        } else if (mode === "mediumAI") {
+            enableTileSelectionAI(gameController.playRoundAI, 0.5);
         } else {
-            displayController.enableTileSelection(gameController.playRoundAI);
+            enableTileSelectionAI(gameController.playRoundAI, 1);
         }
         gameController.restartGame();
         changeGameStatusMessage(`${gameController.getActivePlayer().getPlayerName()}'s turn`);
@@ -373,6 +388,14 @@ const displayController = (() => {
         for (let i = 0; i < 9; i++){
             if (gameBoard[i] === undefined) {
                 gameTileElements[i].addEventListener("click", enabledTiles[i] = function(){playRound(i)});
+            }
+        }
+    }
+
+    const enableTileSelectionAI = (playRound, difficultyRating) => {
+        for (let i = 0; i < 9; i++){
+            if (gameBoard[i] === undefined) {
+                gameTileElements[i].addEventListener("click", enabledTiles[i] = function(){playRound(i, difficultyRating)});
             }
         }
     }
